@@ -1,35 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+const queryClient = new QueryClient();
+
+// Mock data - simulating a database
+const mockUsers = [
+  { id: 1, name: "John Doe", email: "john@example.com", role: "Developer" },
+  { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Designer" },
+  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "Manager" },
+  { id: 4, name: "Alice Williams", email: "alice@example.com", role: "Developer" },
+  { id: 5, name: "Charlie Brown", email: "charlie@example.com", role: "Tester" },
+];
+
+// Simulate async API call with local data
+const fetchUsers = async (): Promise<typeof mockUsers> => {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  
+  // Simulate random error (10% chance)
+  if (Math.random() < 0.1) {
+    throw new Error("Failed to fetch users from local database");
+  }
+  
+  return mockUsers;
+};
+
+// Example: Fetching user data using React Query
+function UserList() {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
+
+  if (isLoading) return <div>Loading users...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h2>User List (React Query Demo)</h2>
+      <button onClick={() => refetch()}>Refetch Users</button>
+      <ul style={{ textAlign: "left", maxWidth: "600px", margin: "20px auto" }}>
+        {data?.map((user) => (
+          <li key={user.id}>
+            <strong>{user.name}</strong> - {user.email} ({user.role})
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div style={{ padding: "20px" }}>
+        <h1>React Query Demo</h1>
+        <UserList />
+      </div>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
